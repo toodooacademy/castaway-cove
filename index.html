@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1a6b8a">
+<title>Castaway Cove</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --sky:#7ec8e3;--ocean:#2a8fb8;--sand:#f0d9a0;--leaf:#3d8b4f;
+  --cream:#f5e6c8;--ink:#2c3e50;--panel:#fffef8;--accent:#e8a838;
+  --heart:#e74c3c;--token:#f1c40f;--gold:#daa520;--safe:#27ae60;
+  --warn:#e67e22;--danger:#c0392b;
+}
+html,body{height:100%;overflow:hidden;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:#0d3a4a;color:var(--ink)}
+#app{width:100%;max-width:390px;height:100%;max-height:844px;margin:0 auto;position:relative;background:linear-gradient(180deg,#87ceeb 0%,#7ec8e3 40%,#2a8fb8 70%,#1a5a75 100%);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 40px rgba(0,0,0,.4)}
+@media(min-height:845px){#app{border-radius:24px;margin-top:calc((100vh - 844px)/2)}}
+
+/* Screens */
+.screen{display:none;flex-direction:column;height:100%;width:100%;position:absolute;inset:0;z-index:10}
+.screen.active{display:flex}
+
+/* Start / Auth */
+#screen-start{background:linear-gradient(180deg,#5eb3d4 0%,#2a8fb8 50%,#1a5a75 100%);align-items:center;justify-content:center;padding:24px;z-index:20}
+.start-card{background:var(--panel);border-radius:20px;padding:28px 22px;width:100%;max-width:340px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.start-card h1{font-size:1.6rem;text-align:center;margin-bottom:4px;color:#1a5a75}
+.start-card .tagline{text-align:center;font-size:.85rem;color:#6a7a8a;margin-bottom:20px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:.75rem;font-weight:600;color:#5a6a7a;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.field input{width:100%;padding:12px 14px;border:2px solid #e0d8c8;border-radius:12px;font-size:1rem;background:#fff;outline:none;transition:border .2s}
+.field input:focus{border-color:var(--accent)}
+.btn{display:block;width:100%;padding:14px;border:none;border-radius:14px;font-size:1.05rem;font-weight:700;cursor:pointer;transition:transform .15s,opacity .15s;text-align:center}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:linear-gradient(135deg,#e8a838,#d4891a);color:#fff;box-shadow:0 4px 12px rgba(212,137,26,.4)}
+.btn-secondary{background:#e8efe8;color:#2c5a3e;margin-top:8px}
+.btn-ghost{background:transparent;color:#5a6a7a;font-size:.9rem;margin-top:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.err{color:var(--danger);font-size:.8rem;margin-top:8px;text-align:center;min-height:1.2em}
+.tiny-island{width:120px;height:80px;margin:0 auto 16px;position:relative}
+.auth-tabs{display:flex;gap:8px;margin-bottom:16px}
+.auth-tabs button{flex:1;padding:10px;border:2px solid #e0d8c8;border-radius:10px;background:#fff;font-weight:600;cursor:pointer;color:#5a6a7a}
+.auth-tabs button.on{border-color:var(--accent);background:#fff8e8;color:#8a6010}
+
+/* Job select */
+#screen-job{background:linear-gradient(180deg,#5eb3d4,#1a5a75);align-items:center;justify-content:center;padding:20px;z-index:20;overflow-y:auto}
+.job-card{background:var(--panel);border-radius:20px;padding:22px;width:100%;max-width:340px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.job-card h2{text-align:center;font-size:1.3rem;margin-bottom:6px;color:#1a5a75}
+.job-card .sub{text-align:center;font-size:.8rem;color:#6a7a8a;margin-bottom:16px}
+.job-list{display:flex;flex-direction:column;gap:10px}
+.job-opt{display:flex;gap:12px;align-items:flex-start;padding:12px;border:2px solid #e0d8c8;border-radius:14px;cursor:pointer;background:#fff;transition:border .2s,background .2s}
+.job-opt.sel{border-color:var(--accent);background:#fff8e8}
+.job-opt .icon{font-size:1.8rem;line-height:1;flex-shrink:0}
+.job-opt .info h3{font-size:.95rem;margin-bottom:2px}
+.job-opt .info p{font-size:.72rem;color:#6a7a8a;line-height:1.35}
+.job-opt .limit{font-size:.68rem;color:var(--warn);margin-top:3px}
+
+/* Game over */
+#screen-over{background:rgba(20,40,60,.92);align-items:center;justify-content:center;padding:24px;z-index:30}
+.over-card{background:var(--panel);border-radius:20px;padding:28px 22px;width:100%;max-width:320px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.over-card h2{font-size:1.5rem;color:var(--danger);margin-bottom:8px}
+.over-card p{font-size:.9rem;color:#5a6a7a;margin-bottom:20px;line-height:1.4}
+
+/* Top bar */
+#topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 8px;background:rgba(255,254,248,.92);backdrop-filter:blur(8px);border-bottom:1px solid rgba(0,0,0,.06);z-index:5;flex-shrink:0;gap:8px}
+.stat{display:flex;align-items:center;gap:4px;font-weight:700;font-size:.9rem}
+.stat .ico{font-size:1.05rem}
+.stat-tokens{color:#8a7010}
+.stat-gold{color:#8a6a10}
+.stat-hearts{color:var(--heart);letter-spacing:1px}
+.btn-more{padding:6px 10px;font-size:.7rem;border-radius:8px;background:#f0e8d0;border:none;font-weight:600;color:#8a7010;cursor:pointer;white-space:nowrap}
+
+/* Island scene */
+#scene{flex:1;position:relative;overflow:hidden;min-height:0}
+#sky-layer{position:absolute;inset:0;background:linear-gradient(180deg,#87ceeb 0%,#b8dff0 45%,#7ec8e3 55%,transparent 55%);transition:background 1.5s}
+#sky-layer.stormy{background:linear-gradient(180deg,#4a5568 0%,#6a7a8a 45%,#5a7080 55%,transparent 55%)}
+#ocean{position:absolute;bottom:0;left:0;right:0;height:42%;background:linear-gradient(180deg,#3aa0c8 0%,#2a8fb8 40%,#1a6b8a 100%)}
+.wave{position:absolute;left:-10%;right:-10%;height:18px;border-radius:50%;background:rgba(255,255,255,.15);animation:wave 4s ease-in-out infinite}
+.wave:nth-child(1){top:8%;animation-delay:0s}
+.wave:nth-child(2){top:28%;animation-delay:1.2s;opacity:.7}
+.wave:nth-child(3){top:52%;animation-delay:2.4s;opacity:.5}
+@keyframes wave{0%,100%{transform:translateX(0)}50%{transform:translateX(12px)}}
+#island{position:absolute;left:50%;bottom:28%;transform:translateX(-50%);width:280px;height:140px}
+.island-base{position:absolute;bottom:0;left:10%;right:10%;height:55px;background:radial-gradient(ellipse at center,#f5e0a8 0%,#e8c878 60%,#d4a84a 100%);border-radius:50% 50% 40% 40%;box-shadow:0 8px 0 #c89840,0 12px 20px rgba(0,0,0,.15)}
+.island-rim{position:absolute;bottom:48px;left:15%;right:15%;height:12px;background:#e8d090;border-radius:50%;opacity:.6}
+
+/* Tree */
+#tree{position:absolute;bottom:50px;left:55%;width:60px;height:100px}
+.trunk{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:10px;height:55px;background:linear-gradient(90deg,#8B6914,#A07828,#8B6914);border-radius:4px}
+.fronds{position:absolute;top:0;left:50%;transform:translateX(-50%)}
+.frond{position:absolute;width:40px;height:14px;background:var(--leaf);border-radius:50% 0;transform-origin:left center}
+.frond:nth-child(1){transform:rotate(-70deg)}
+.frond:nth-child(2){transform:rotate(-30deg)}
+.frond:nth-child(3){transform:rotate(10deg)}
+.frond:nth-child(4){transform:rotate(50deg)}
+.frond:nth-child(5){transform:rotate(-100deg) scaleX(-1);left:-40px}
+.coconut{position:absolute;width:8px;height:8px;background:#6B4423;border-radius:50%;top:48px}
+.coconut:nth-child(6){left:22px}
+.coconut:nth-child(7){left:30px;top:52px}
+
+/* Character */
+#char{position:absolute;bottom:52px;left:28%;width:44px;height:70px;transition:left .6s ease}
+.char-body{position:relative;width:100%;height:100%}
+.char-head{position:absolute;top:0;left:50%;transform:translateX(-50%);width:22px;height:22px;background:#f5c89a;border-radius:50%}
+.char-hair{position:absolute;top:-2px;left:50%;transform:translateX(-50%);width:24px;height:10px;background:#5a4030;border-radius:10px 10px 2px 2px}
+.char-shirt{position:absolute;top:20px;left:50%;transform:translateX(-50%);width:26px;height:22px;background:#f5f5f0;border-radius:4px 4px 2px 2px;clip-path:polygon(0 0,100% 0,95% 100%,5% 100%)}
+.char-shirt::after{content:'';position:absolute;bottom:2px;left:4px;width:8px;height:6px;background:transparent;border-bottom:2px solid #ddd;border-right:2px solid #ddd;transform:rotate(20deg)}
+.char-arm-l,.char-arm-r{position:absolute;top:22px;width:7px;height:18px;background:#f5c89a;border-radius:4px}
+.char-arm-l{left:2px;transform:rotate(15deg)}
+.char-arm-r{right:2px;transform:rotate(-15deg)}
+.char-pants{position:absolute;top:40px;left:50%;transform:translateX(-50%);width:22px;height:18px;background:#5a6a7a;border-radius:0 0 3px 3px}
+.char-pants::before,.char-pants::after{content:'';position:absolute;bottom:-2px;width:9px;height:12px;background:#5a6a7a;border-radius:0 0 3px 3px}
+.char-pants::before{left:0;transform:rotate(5deg)}
+.char-pants::after{right:0;transform:rotate(-5deg)}
+.char-pants .rip{position:absolute;top:4px;right:2px;width:6px;height:3px;background:#4a5a6a;border-radius:1px}
+
+/* Avatar (puffball) */
+#avatar{position:absolute;bottom:54px;left:48%;width:32px;height:28px;transition:left .8s ease;z-index:3}
+.puff{position:relative;width:28px;height:24px;background:radial-gradient(ellipse at 40% 40%,#fff8e8,#f0dcc0 50%,#e8d0a8);border-radius:50% 50% 45% 45%;box-shadow:0 2px 6px rgba(0,0,0,.15),inset 0 -3px 6px rgba(200,170,120,.3)}
+.puff-ear-l,.puff-ear-r{position:absolute;top:-6px;width:10px;height:12px;background:#f0dcc0;border-radius:50% 50% 40% 40%}
+.puff-ear-l{left:2px;transform:rotate(-20deg)}
+.puff-ear-r{right:2px;transform:rotate(20deg)}
+.puff-ear-l::after,.puff-ear-r::after{content:'';position:absolute;top:3px;left:2px;width:5px;height:6px;background:#f8c8b0;border-radius:50%}
+.puff-eye-l,.puff-eye-r{position:absolute;top:9px;width:5px;height:6px;background:#3a2a1a;border-radius:50%}
+.puff-eye-l{left:7px}
+.puff-eye-r{right:7px}
+.puff-nose{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:5px;height:3px;background:#e8a090;border-radius:50%}
+.puff-tail{position:absolute;right:-6px;bottom:4px;width:12px;height:10px;background:#f0dcc0;border-radius:50%;transform:rotate(20deg)}
+/* Job attire overlays */
+.attire{position:absolute;pointer-events:none}
+.hardhat{top:-8px;left:50%;transform:translateX(-50%);width:22px;height:10px;background:#f0c040;border-radius:8px 8px 2px 2px;box-shadow:0 1px 0 #d4a020}
+.hardhat::after{content:'';position:absolute;bottom:-2px;left:-2px;right:-2px;height:3px;background:#e8b030;border-radius:2px}
+.toolbelt{bottom:-2px;left:50%;transform:translateX(-50%);width:24px;height:6px;background:#8B6914;border-radius:2px}
+.toolbelt::before{content:'';position:absolute;left:4px;top:-3px;width:5px;height:5px;background:#888;border-radius:1px}
+.strawhat{top:-10px;left:50%;transform:translateX(-50%);width:26px;height:8px;background:#d4b878;border-radius:50%;box-shadow:0 2px 0 #c4a868}
+.strawhat::before{content:'';position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:14px;height:8px;background:#d4b878;border-radius:50% 50% 0 0}
+.rod{top:4px;right:-10px;width:3px;height:22px;background:#8B6914;transform:rotate(25deg);border-radius:1px}
+.rod::after{content:'';position:absolute;bottom:-2px;left:-1px;width:8px;height:2px;background:#aaa}
+.leafcrown{top:-8px;left:50%;transform:translateX(-50%);width:24px;height:8px}
+.leafcrown span{position:absolute;width:8px;height:10px;background:var(--leaf);border-radius:50% 0;top:0}
+.leafcrown span:nth-child(1){left:0;transform:rotate(-40deg)}
+.leafcrown span:nth-child(2){left:8px;transform:rotate(-10deg)}
+.leafcrown span:nth-child(3){left:14px;transform:rotate(20deg)}
+.herbpouch{bottom:0;right:-4px;width:8px;height:8px;background:#6B8E4E;border-radius:2px 2px 4px 4px}
+.safarihat{top:-10px;left:50%;transform:translateX(-50%);width:26px;height:7px;background:#c4a060;border-radius:50%;box-shadow:0 2px 0 #a88850}
+.safarihat::before{content:'';position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:12px;height:7px;background:#c4a060;border-radius:4px 4px 0 0}
+.mapscroll{bottom:2px;right:-8px;width:10px;height:8px;background:#e8dcc0;border-radius:1px;border:1px solid #c8b890;transform:rotate(15deg)}
+
+/* Builds on island */
+#builds{position:absolute;inset:0;pointer-events:none}
+.build{position:absolute;bottom:50px;display:flex;flex-direction:column;align-items:center;font-size:.55rem;color:#5a4030;font-weight:600;text-align:center;line-height:1.1;opacity:0;animation:popIn .4s forwards}
+@keyframes popIn{to{opacity:1;transform:scale(1)}from{opacity:0;transform:scale(.5)}}
+.build-icon{font-size:1.4rem;filter:drop-shadow(0 2px 2px rgba(0,0,0,.2))}
+.build.building{opacity:.5;animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:.8}}
+.b-leanto{left:8%}
+.b-campfire{left:38%}
+.b-hut{left:12%}
+.b-roof{left:14%;bottom:78px}
+.b-farm{left:68%}
+.b-wall{left:0%}
+.b-dock{left:75%;bottom:30px}
+.b-workshop{left:55%}
+.b-basket{left:42%;bottom:48px}
+.b-torch{left:22%;bottom:48px}
+
+/* Storm overlay */
+#storm-fx{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 1s;z-index:4;background:rgba(40,50,70,.35)}
+#storm-fx.on{opacity:1}
+.rain{position:absolute;width:2px;height:14px;background:rgba(200,220,255,.5);animation:rainfall linear infinite}
+@keyframes rainfall{0%{transform:translateY(-20px);opacity:1}100%{transform:translateY(400px);opacity:.3}}
+.lightning{position:absolute;inset:0;background:rgba(255,255,255,.7);opacity:0;animation:flash .3s}
+@keyframes flash{0%,100%{opacity:0}50%{opacity:1}}
+
+/* Map hint */
+#map-hint{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(255,254,248,.9);padding:6px 12px;border-radius:20px;font-size:.72rem;color:#6a5a30;box-shadow:0 2px 8px rgba(0,0,0,.1);opacity:0;transition:opacity .4s;z-index:6;white-space:nowrap;pointer-events:none}
+#map-hint.show{opacity:1}
+#loc-label{position:absolute;top:8px;right:10px;background:rgba(255,254,248,.85);padding:4px 10px;border-radius:10px;font-size:.65rem;color:#5a6a7a;z-index:6;font-weight:600}
+
+/* Chat */
+#chat{flex-shrink:0;background:rgba(255,254,248,.96);border-top:1px solid rgba(0,0,0,.08);display:flex;flex-direction:column;max-height:42%;z-index:5}
+#messages{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;min-height:80px;max-height:180px;scroll-behavior:smooth}
+.msg{max-width:88%;padding:8px 12px;border-radius:14px;font-size:.82rem;line-height:1.35;word-wrap:break-word}
+.msg.player{align-self:flex-end;background:#d4eaf5;border-bottom-right-radius:4px;color:#1a4a5a}
+.msg.avatar{align-self:flex-start;background:#f5edd8;border-bottom-left-radius:4px;color:#4a3a20}
+.msg.system{align-self:center;background:transparent;color:#8a9aaa;font-size:.72rem;padding:2px 8px;max-width:95%;text-align:center}
+.msg .cost{display:inline-block;margin-left:4px;font-size:.7rem;color:#8a7010;font-weight:600}
+#chat-form{display:flex;gap:8px;padding:8px 12px 12px;align-items:center}
+#chat-input{flex:1;padding:11px 14px;border:2px solid #e0d8c8;border-radius:20px;font-size:.9rem;outline:none;background:#fff}
+#chat-input:focus{border-color:var(--accent)}
+#chat-send{width:42px;height:42px;border:none;border-radius:50%;background:linear-gradient(135deg,#e8a838,#d4891a);color:#fff;font-size:1.1rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+#chat-send:active{transform:scale(.92)}
+.quick-tips{display:flex;gap:6px;padding:0 12px 6px;overflow-x:auto;scrollbar-width:none}
+.quick-tips::-webkit-scrollbar{display:none}
+.tip{flex-shrink:0;padding:5px 10px;border-radius:12px;background:#f0e8d0;border:none;font-size:.68rem;color:#6a5a30;cursor:pointer;font-weight:500}
+.tip:active{background:#e0d8c0}
+
+/* Toast */
+#toast{position:absolute;top:60px;left:50%;transform:translateX(-50%) translateY(-20px);background:rgba(40,50,60,.92);color:#fff;padding:10px 18px;border-radius:12px;font-size:.8rem;opacity:0;transition:all .35s;z-index:50;pointer-events:none;max-width:80%;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Coming soon modal */
+#modal{display:none;position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:40;align-items:center;justify-content:center;padding:24px}
+#modal.open{display:flex}
+.modal-card{background:var(--panel);border-radius:16px;padding:24px;text-align:center;max-width:280px;width:100%}
+.modal-card h3{margin-bottom:8px;color:#1a5a75}
+.modal-card p{font-size:.85rem;color:#6a7a8a;margin-bottom:16px}
+
+/* Building progress */
+#build-progress{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(255,254,248,.95);padding:6px 14px;border-radius:12px;font-size:.72rem;color:#5a4a20;box-shadow:0 2px 8px rgba(0,0,0,.12);display:none;z-index:6;align-items:center;gap:8px}
+#build-progress.show{display:flex}
+.prog-bar{width:80px;height:6px;background:#e0d8c8;border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--accent);border-radius:3px;width:0%;transition:width .3s}
+
+/* World mini-map peek */
+#minimap{position:absolute;top:36px;left:8px;width:56px;height:56px;background:rgba(255,254,248,.85);border-radius:10px;border:2px solid rgba(0,0,0,.08);z-index:6;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);gap:1px;padding:3px;cursor:default}
+.mm-cell{border-radius:2px;background:#d0e0e8}
+.mm-cell.explored{background:#a8d4a0}
+.mm-cell.here{background:#e8a838;box-shadow:inset 0 0 0 1px #fff}
+.mm-cell.water{background:#7ec8e3}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- START SCREEN -->
+  <div id="screen-start" class="screen active">
+    <div class="start-card">
+      <div class="tiny-island" aria-hidden="true">
+        <svg viewBox="0 0 120 80" width="120" height="80">
+          <ellipse cx="60" cy="62" rx="48" ry="14" fill="#e8c878"/>
+          <ellipse cx="60" cy="58" rx="42" ry="10" fill="#f5e0a8"/>
+          <rect x="72" y="28" width="5" height="30" rx="2" fill="#8B6914"/>
+          <ellipse cx="74" cy="28" rx="18" ry="8" fill="#3d8b4f" transform="rotate(-20 74 28)"/>
+          <ellipse cx="74" cy="28" rx="16" ry="7" fill="#4a9e5c" transform="rotate(30 74 28)"/>
+          <ellipse cx="74" cy="28" rx="14" ry="6" fill="#3d8b4f" transform="rotate(80 74 28)"/>
+          <circle cx="42" cy="48" r="6" fill="#f5c89a"/>
+          <rect x="38" y="53" width="9" height="8" rx="1" fill="#f5f5f0"/>
+          <ellipse cx="55" cy="56" rx="5" ry="4" fill="#f0dcc0"/>
+          <rect x="0" y="68" width="120" height="12" fill="#2a8fb8" opacity=".6"/>
+        </svg>
+      </div>
+      <h1>Castaway Cove</h1>
+      <p class="tagline">A tiny island. A fluffy friend. Survive together.</p>
+      <div class="auth-tabs">
+        <button type="button" class="on" id="tab-create" onclick="switchAuth('create')">Create</button>
+        <button type="button" id="tab-login" onclick="switchAuth('login')">Return</button>
+      </div>
+      <form id="auth-form" onsubmit="return handleAuth(event)">
+        <div class="field" id="field-user">
+          <label for="inp-user">Username</label>
+          <input id="inp-user" name="user" autocomplete="username" maxlength="20" required placeholder="choose a name">
+        </div>
+        <div class="field">
+          <label for="inp-pass">Password</label>
+          <input id="inp-pass" name="pass" type="password" autocomplete="current-password" maxlength="40" required placeholder="local only">
+        </div>
+        <div class="field" id="field-nick">
+          <label for="inp-nick">Nickname</label>
+          <input id="inp-nick" name="nick" maxlength="16" placeholder="what friends call you">
+        </div>
+        <button type="submit" class="btn btn-primary" id="btn-auth">Start</button>
+        <p class="err" id="auth-err"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- JOB SCREEN -->
+  <div id="screen-job" class="screen">
+    <div class="job-card">
+      <h2>Choose a path</h2>
+      <p class="sub">Your fluffy friend will learn this craft. Each path has strengths and one limit.</p>
+      <div class="job-list" id="job-list"></div>
+      <button type="button" class="btn btn-primary" id="btn-job" style="margin-top:16px" disabled onclick="confirmJob()">Begin journey</button>
+    </div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div id="screen-over" class="screen">
+    <div class="over-card">
+      <h2>Washed away</h2>
+      <p id="over-msg">The storm was too much. Your island is gone — but treasures you hid may still wait somewhere out there.</p>
+      <button type="button" class="btn btn-primary" onclick="restartFarAway()">Wake up somewhere far away</button>
+    </div>
+  </div>
+
+  <!-- PLAY VIEW -->
+  <div id="screen-game" class="screen">
+    <div id="topbar">
+      <div class="stat stat-tokens"><span class="ico">🪙</span><span id="ui-tokens">45</span></div>
+      <div class="stat stat-gold"><span class="ico">🟨</span><span id="ui-gold">0</span></div>
+      <div class="stat stat-hearts" id="ui-hearts">❤️❤️❤️</div>
+      <button type="button" class="btn-more" onclick="showComingSoon()">Get more tokens</button>
+    </div>
+
+    <div id="scene">
+      <div id="sky-layer"></div>
+      <div id="ocean">
+        <div class="wave"></div><div class="wave"></div><div class="wave"></div>
+      </div>
+      <div id="island">
+        <div class="island-rim"></div>
+        <div class="island-base"></div>
+        <div id="tree">
+          <div class="fronds">
+            <div class="frond"></div><div class="frond"></div><div class="frond"></div>
+            <div class="frond"></div><div class="frond"></div>
+            <div class="coconut"></div><div class="coconut"></div>
+          </div>
+          <div class="trunk"></div>
+        </div>
+        <div id="builds"></div>
+        <div id="char">
+          <div class="char-body">
+            <div class="char-hair"></div>
+            <div class="char-head"></div>
+            <div class="char-arm-l"></div>
+            <div class="char-arm-r"></div>
+            <div class="char-shirt"></div>
+            <div class="char-pants"><div class="rip"></div></div>
+          </div>
+        </div>
+        <div id="avatar">
+          <div class="puff-tail"></div>
+          <div class="puff">
+            <div class="puff-ear-l"></div>
+            <div class="puff-ear-r"></div>
+            <div class="puff-eye-l"></div>
+            <div class="puff-eye-r"></div>
+            <div class="puff-nose"></div>
+            <div id="attire-slot"></div>
+          </div>
+        </div>
+      </div>
+      <div id="storm-fx"></div>
+      <div id="map-hint"></div>
+      <div id="loc-label">Isle · 2,2</div>
+      <div id="minimap" title="World map"></div>
+      <div id="build-progress"><span id="bp-label">Building…</span><div class="prog-bar"><div class="prog-fill" id="bp-fill"></div></div></div>
+      <div id="toast"></div>
+    </div>
+
+    <div id="chat">
+      <div id="messages"></div>
+      <div class="quick-tips" id="quick-tips"></div>
+      <form id="chat-form" onsubmit="return sendChat(event)">
+        <input id="chat-input" type="text" maxlength="200" placeholder="Talk to your friend…" autocomplete="off">
+        <button type="submit" id="chat-send" aria-label="Send">➤</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal">
+    <div class="modal-card">
+      <h3 id="modal-title">Coming soon</h3>
+      <p id="modal-body">Token top-ups will arrive in a future update. Keep exploring and earning gold for now!</p>
+      <button type="button" class="btn btn-primary" onclick="closeModal()">Okay</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+const STORAGE_KEY = 'castawayCove_v1';
+const WORLD_KEY = 'castawayCove_world_v1';
+const GRID = 5; // 5x5 island grid
+const START_TOKENS = 45;
+const START_HEARTS = 3;
+const STORM_ACTION_MIN = 8;
+const STORM_ACTION_MAX = 10;
+const REFUSE = "That's beyond my paws! Let's find another way.";
+
+const JOBS = {
+  builder: {
+    id:'builder', name:'Builder', emoji:'🔨',
+    desc:'Build huts, craft tools, raise structures.',
+    limit:'Cannot sail across the sea.',
+    attire:'hardhat',
+    discount:['build','craft_tool','shelter','structure','repair'],
+    ban:['sail','boat_travel','far_sail']
+  },
+  fisher: {
+    id:'fisher', name:'Fisher', emoji:'🎣',
+    desc:'Catch fish, craft nets, work the shore.',
+    limit:'Cannot climb mountains.',
+    attire:'strawhat',
+    discount:['fish','craft_net','gather_fish'],
+    ban:['climb','mountain']
+  },
+  healer: {
+    id:'healer', name:'Healer', emoji:'🌿',
+    desc:'Brew remedies and mend wounds.',
+    limit:'Cannot fight.',
+    attire:'leafcrown',
+    discount:['heal','brew','remedy'],
+    ban:['fight','attack','combat']
+  },
+  explorer: {
+    id:'explorer', name:'Explorer', emoji:'🧭',
+    desc:'Read maps and travel faster.',
+    limit:'Cannot build bases.',
+    attire:'safarihat',
+    discount:['explore','travel','map'],
+    ban:['build_base','hut','structure','shelter','lean-to','workshop','farm','wall','dock','roof']
+  }
+};
+
+const COSTS = {
+  gather:1, gather_fish:1,
+  spear:1, rope:1, basket:2, torch:2,
+  lean_to:3, campfire:3,
+  explore_near:2,
+  axe:3, net:4, raft:5,
+  hut:7, roof:6,
+  farm:8, wall:10, dock:12, workshop:15,
+  explore_far_min:5, explore_far_max:10,
+  hide:2, repair:1,
+  heal:2, brew:3
+};
+
+const BUILD_DELAY = { lean_to:25, campfire:20, hut:45, roof:35, farm:50, wall:55, dock:50, workshop:60, spear:15, rope:12, basket:15, torch:12, axe:30, net:28, raft:40 };
+
+// ——— State ———
+let state = null;
+let selectedJob = null;
+let authMode = 'create';
+let buildTimer = null;
+let stormWarned = false;
+let rainInterval = null;
+
+function defaultState(user, nick){
+  return {
+    user, nick: nick||user, passHash:'',
+    job:null,
+    tokens: START_TOKENS,
+    gold:0,
+    hearts: START_HEARTS,
+    bag: { coconuts:0, sticks:0, stones:0, fish:0, water:0, food:0 },
+    tools: {},
+    builds: {},
+    building: null,
+    actions:0,
+    stormDone:false,
+    stormStrength:0,
+    explored: { '2,2': true },
+    pos: {x:2, y:2},
+    chatLog: [],
+    alive:true,
+    startedAt: Date.now(),
+    materialsUsed: false
+  };
+}
+
+function hashPass(p){
+  let h=0; for(let i=0;i<p.length;i++){ h=((h<<5)-h)+p.charCodeAt(i); h|=0; }
+  return 'h'+Math.abs(h).toString(36)+p.length;
+}
+
+function loadAccounts(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); }catch(e){ return {}; }
+}
+function saveAccounts(acc){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(acc));
+}
+function loadWorld(){
+  try{ return JSON.parse(localStorage.getItem(WORLD_KEY)||'null'); }catch(e){ return null; }
+}
+function saveWorld(w){
+  localStorage.setItem(WORLD_KEY, JSON.stringify(w));
+}
+function ensureWorld(){
+  let w = loadWorld();
+  if(!w){
+    w = { treasures: [], seed: Date.now() };
+    // Seed a few lucky finds
+    const spots = [];
+    for(let x=0;x<GRID;x++) for(let y=0;y<GRID;y++){
+      if(!(x===2&&y===2)) spots.push({x,y});
+    }
+    shuffle(spots);
+    for(let i=0;i<3;i++){
+      const s = spots[i];
+      w.treasures.push({
+        id:'lucky_'+i,
+        x:s.x, y:s.y,
+        tokens: 2+Math.floor(Math.random()*4),
+        items: Math.random()>.5 ? {coconuts:1+Math.floor(Math.random()*2)} : {sticks:2},
+        owner:null,
+        found:false
+      });
+    }
+    saveWorld(w);
+  }
+  return w;
+}
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function saveGame(){
+  if(!state||!state.user) return;
+  const acc = loadAccounts();
+  acc[state.user] = state;
+  saveAccounts(acc);
+}
+
+// ——— UI helpers ———
+function $(id){ return document.getElementById(id); }
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+function toast(msg){
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'), 2800);
+}
+function showComingSoon(){
+  $('modal-title').textContent='Coming soon';
+  $('modal-body').textContent='Token top-ups will arrive in a future update. Keep exploring and earning gold for now!';
+  $('modal').classList.add('open');
+}
+function closeModal(){ $('modal').classList.remove('open'); }
+
+function switchAuth(mode){
+  authMode=mode;
+  $('tab-create').classList.toggle('on', mode==='create');
+  $('tab-login').classList.toggle('on', mode==='login');
+  $('field-nick').style.display = mode==='create' ? '' : 'none';
+  $('inp-nick').required = mode==='create';
+  $('btn-auth').textContent = mode==='create' ? 'Start' : 'Return';
+  $('auth-err').textContent='';
+}
+
+function handleAuth(e){
+  e.preventDefault();
+  const user = $('inp-user').value.trim().toLowerCase();
+  const pass = $('inp-pass').value;
+  const nick = $('inp-nick').value.trim();
+  const err = $('auth-err');
+  err.textContent='';
+  if(!user||!pass){ err.textContent='Please fill in username and password.'; return false; }
+  if(user.length<2){ err.textContent='Username needs at least 2 characters.'; return false; }
+  const acc = loadAccounts();
+  if(authMode==='create'){
+    if(acc[user]){ err.textContent='That username is taken on this device.'; return false; }
+    state = defaultState(user, nick||user);
+    state.passHash = hashPass(pass);
+    // Prefill Top as first player nickname hint already handled
+    saveGame();
+    ensureWorld();
+    openJobSelect();
+  } else {
+    if(!acc[user] || acc[user].passHash !== hashPass(pass)){
+      err.textContent='Username or password does not match.'; return false;
+    }
+    state = acc[user];
+    ensureWorld();
+    if(!state.job){ openJobSelect(); }
+    else if(!state.alive){ showScreen('screen-over'); }
+    else { enterGame(); }
+  }
+  return false;
+}
+
+function openJobSelect(){
+  const list = $('job-list');
+  list.innerHTML='';
+  selectedJob=null;
+  $('btn-job').disabled=true;
+  Object.values(JOBS).forEach(j=>{
+    const d=document.createElement('div');
+    d.className='job-opt';
+    d.dataset.job=j.id;
+    d.innerHTML=`<div class="icon">${j.emoji}</div><div class="info"><h3>${j.name}</h3><p>${j.desc}</p><div class="limit">Limit: ${j.limit}</div></div>`;
+    d.onclick=()=>{
+      list.querySelectorAll('.job-opt').forEach(x=>x.classList.remove('sel'));
+      d.classList.add('sel');
+      selectedJob=j.id;
+      $('btn-job').disabled=false;
+    };
+    list.appendChild(d);
+  });
+  showScreen('screen-job');
+}
+
+function confirmJob(){
+  if(!selectedJob||!state) return;
+  state.job=selectedJob;
+  saveGame();
+  enterGame();
+}
+
+function enterGame(){
+  showScreen('screen-game');
+  updateAttire();
+  updateUI();
+  renderBuilds();
+  renderMinimap();
+  renderTips();
+  $('messages').innerHTML='';
+  if(state.chatLog && state.chatLog.length){
+    state.chatLog.slice(-20).forEach(m=>appendMsg(m.who,m.text,true));
+  } else {
+    const name = JOBS[state.job].name;
+    addAvatar(`Hi ${state.nick}! I'm Puff, your ${name} pal. Ask me to gather, build, explore, or hide things. Talk is free — actions cost tokens.`);
+  }
+  checkTreasureNear();
+  // Resume building timer if any
+  if(state.building) resumeBuild();
+  // Check pending storm
+  maybeScheduleStorm();
+}
+
+function updateAttire(){
+  const slot=$('attire-slot');
+  slot.innerHTML='';
+  if(!state||!state.job) return;
+  const j=JOBS[state.job];
+  if(j.attire==='hardhat'){
+    slot.innerHTML='<div class="attire hardhat"></div><div class="attire toolbelt"></div>';
+  } else if(j.attire==='strawhat'){
+    slot.innerHTML='<div class="attire strawhat"></div><div class="attire rod"></div>';
+  } else if(j.attire==='leafcrown'){
+    slot.innerHTML='<div class="attire leafcrown"><span></span><span></span><span></span></div><div class="attire herbpouch"></div>';
+  } else if(j.attire==='safarihat'){
+    slot.innerHTML='<div class="attire safarihat"></div><div class="attire mapscroll"></div>';
+  }
+}
+
+function updateUI(){
+  if(!state) return;
+  $('ui-tokens').textContent = state.tokens;
+  $('ui-gold').textContent = state.gold;
+  $('ui-hearts').textContent = '❤️'.repeat(Math.max(0,state.hearts)) + (state.hearts<=0?'💔':'');
+  $('loc-label').textContent = `Isle · ${state.pos.x},${state.pos.y}`;
+  // Gold conversion hint: every 10 gold -> offer convert passively tracked
+}
+
+function appendMsg(who, text, skipSave){
+  const box=$('messages');
+  const d=document.createElement('div');
+  d.className='msg '+who;
+  d.textContent=text;
+  box.appendChild(d);
+  box.scrollTop=box.scrollHeight;
+  if(!skipSave && state){
+    state.chatLog = state.chatLog||[];
+    state.chatLog.push({who,text,t:Date.now()});
+    if(state.chatLog.length>40) state.chatLog=state.chatLog.slice(-40);
+    saveGame();
+  }
+}
+function addAvatar(t){ appendMsg('avatar', t); }
+function addPlayer(t){ appendMsg('player', t); }
+function addSystem(t){
+  const box=$('messages');
+  const d=document.createElement('div');
+  d.className='msg system';
+  d.textContent=t;
+  box.appendChild(d);
+  box.scrollTop=box.scrollHeight;
+}
+
+function renderTips(){
+  const tips=[
+    'gather coconuts','gather sticks','build lean-to','light campfire',
+    'build hut','add roof','explore nearby','catch fish','hide treasure','status'
+  ];
+  const el=$('quick-tips');
+  el.innerHTML='';
+  tips.forEach(t=>{
+    const b=document.createElement('button');
+    b.type='button'; b.className='tip'; b.textContent=t;
+    b.onclick=()=>{ $('chat-input').value=t; sendChat({preventDefault(){}}); };
+    el.appendChild(b);
+  });
+}
+
+function renderBuilds(){
+  const el=$('builds');
+  el.innerHTML='';
+  const icons={
+    lean_to:'⛺ Lean-to', campfire:'🔥 Fire', hut:'🏠 Hut', roof:'🛡️ Roof',
+    farm:'🌱 Farm', wall:'🧱 Wall', dock:'⚓ Dock', workshop:'🔧 Shop',
+    basket:'🧺', torch:'🔦'
+  };
+  // Fix roof label - use ASCII
+  icons.roof='🛡️ Roof';
+  Object.keys(state.builds||{}).forEach(k=>{
+    if(!state.builds[k]) return;
+    const d=document.createElement('div');
+    d.className='build b-'+k.replace('_','');
+    // map class names
+    const cls={lean_to:'b-leanto',campfire:'b-campfire',hut:'b-hut',roof:'b-roof',farm:'b-farm',wall:'b-wall',dock:'b-dock',workshop:'b-workshop',basket:'b-basket',torch:'b-torch'};
+    d.className='build '+(cls[k]||'');
+    const parts=(icons[k]||k).split(' ');
+    d.innerHTML=`<span class="build-icon">${parts[0]}</span><span>${parts.slice(1).join(' ')}</span>`;
+    el.appendChild(d);
+  });
+  if(state.building){
+    const k=state.building.id;
+    const d=document.createElement('div');
+    const cls={lean_to:'b-leanto',campfire:'b-campfire',hut:'b-hut',roof:'b-roof',farm:'b-farm',wall:'b-wall',dock:'b-dock',workshop:'b-workshop'};
+    d.className='build building '+(cls[k]||'');
+    d.innerHTML=`<span class="build-icon">⏳</span><span>${k.replace('_',' ')}</span>`;
+    el.appendChild(d);
+  }
+}
+
+function renderMinimap(){
+  const mm=$('minimap');
+  mm.innerHTML='';
+  for(let y=0;y<GRID;y++){
+    for(let x=0;x<GRID;x++){
+      const c=document.createElement('div');
+      c.className='mm-cell';
+      const key=x+','+y;
+      if(state.explored[key]) c.classList.add('explored');
+      if(state.pos.x===x && state.pos.y===y) c.classList.add('here');
+      mm.appendChild(c);
+    }
+  }
+}
+
+function checkTreasureNear(){
+  const w=ensureWorld();
+  const near = w.treasures.filter(t=>!t.found && Math.abs(t.x-state.pos.x)+Math.abs(t.y-state.pos.y)<=1 && !(t.x===state.pos.x&&t.y===state.pos.y));
+  const here = w.treasures.filter(t=>!t.found && t.x===state.pos.x && t.y===state.pos.y);
+  const hint=$('map-hint');
+  if(here.length){
+    hint.textContent='Something is buried nearby…';
+    hint.classList.add('show');
+  } else if(near.length){
+    hint.textContent='Something is buried nearby…';
+    hint.classList.add('show');
+  } else {
+    hint.classList.remove('show');
+  }
+}
+
+// ——— Economy ———
+function jobDiscount(tags){
+  if(!state.job) return 0;
+  const j=JOBS[state.job];
+  return tags.some(t=>j.discount.includes(t)) ? 1 : 0;
+}
+function isBanned(tags){
+  if(!state.job) return false;
+  const j=JOBS[state.job];
+  return tags.some(t=>j.ban.includes(t));
+}
+function peekMaterialDiscount(kind){
+  const bag=state.bag;
+  if(kind==='lean_to'||kind==='hut'||kind==='roof'||kind==='wall'||kind==='workshop'||kind==='dock'){
+    if(bag.sticks>=2) return 1;
+  }
+  if(kind==='campfire'||kind==='torch'){
+    if(bag.sticks>=1) return 1;
+  }
+  if(kind==='farm'){
+    if(bag.coconuts>=1) return 1;
+  }
+  return 0;
+}
+function consumeMaterials(kind){
+  const bag=state.bag;
+  if(kind==='lean_to'||kind==='hut'||kind==='roof'||kind==='wall'||kind==='workshop'||kind==='dock'){
+    if(bag.sticks>=2){ bag.sticks-=2; return 1; }
+  }
+  if(kind==='campfire'||kind==='torch'){
+    if(bag.sticks>=1){ bag.sticks-=1; return 1; }
+  }
+  if(kind==='farm'){
+    if(bag.coconuts>=1){ bag.coconuts-=1; return 1; }
+  }
+  return 0;
+}
+function charge(base, tags, kind){
+  let cost = base - jobDiscount(tags);
+  if(kind) cost -= peekMaterialDiscount(kind);
+  if(cost<0) cost=0;
+  return cost;
+}
+function canPay(cost){ return state.tokens >= cost; }
+function pay(cost){
+  state.tokens -= cost;
+  // Earn a little gold from play
+  state.gold += Math.max(1, Math.floor(cost/2)+1);
+  // Auto convert every 10 gold
+  while(state.gold>=10){
+    state.gold-=10;
+    state.tokens+=1;
+    toast('10 gold → 1 token');
+  }
+  updateUI();
+  saveGame();
+}
+function bumpAction(){
+  state.actions = (state.actions||0)+1;
+  saveGame();
+  maybeScheduleStorm();
+}
+
+// ——— Storm ———
+function maybeScheduleStorm(){
+  if(!state||state.stormDone||!state.alive||state._stormTriggered) return;
+  if(state._stormAt==null){
+    state._stormAt = STORM_ACTION_MIN + Math.floor(Math.random()*(STORM_ACTION_MAX-STORM_ACTION_MIN+1));
+    saveGame();
+  }
+  if(!stormWarned && state.actions >= state._stormAt - 1){
+    stormWarned=true;
+    addAvatar('The sky looks angry… We should make sure we have shelter and food ready.');
+    $('sky-layer').classList.add('stormy');
+  }
+  if(state.actions >= state._stormAt){
+    state._stormTriggered=true;
+    saveGame();
+    setTimeout(triggerStorm, 1200);
+  }
+}
+// Also soft timer: after a few minutes
+let softStormTimer=null;
+function startSoftStormClock(){
+  clearTimeout(softStormTimer);
+  softStormTimer=setTimeout(()=>{
+    if(state&&!state.stormDone&&state.alive&&state.actions>=4){
+      state._stormAt = state.actions; // trigger soon
+      maybeScheduleStorm();
+    }
+  }, 180000); // 3 min
+}
+
+function triggerStorm(){
+  if(!state||state.stormDone||!state.alive) return;
+  state.stormDone=true;
+  state.stormStrength = 1+Math.floor(Math.random()*10);
+  saveGame();
+  startRain();
+  addSystem('A storm rolls in…');
+  setTimeout(()=>resolveStorm(), 3500);
+}
+
+function startRain(){
+  const fx=$('storm-fx');
+  fx.classList.add('on');
+  fx.innerHTML='';
+  for(let i=0;i<40;i++){
+    const r=document.createElement('div');
+    r.className='rain';
+    r.style.left=(Math.random()*100)+'%';
+    r.style.animationDuration=(0.4+Math.random()*0.6)+'s';
+    r.style.animationDelay=(Math.random()*2)+'s';
+    fx.appendChild(r);
+  }
+  const flash=()=>{
+    const l=document.createElement('div');
+    l.className='lightning';
+    fx.appendChild(l);
+    setTimeout(()=>l.remove(),400);
+  };
+  flash();
+  setTimeout(flash,900);
+  setTimeout(flash,2000);
+}
+
+function stopRain(){
+  const fx=$('storm-fx');
+  fx.classList.remove('on');
+  fx.innerHTML='';
+  $('sky-layer').classList.remove('stormy');
+}
+
+function resolveStorm(){
+  const s=state.stormStrength;
+  const b=state.builds||{};
+  const bag=state.bag;
+  const food = (bag.food||0)+(bag.fish||0)+(bag.coconuts||0);
+  const water = bag.water||0;
+  let ok=false;
+  let need='';
+  if(s<=4){
+    ok = !!(b.lean_to && b.campfire && food>=1);
+    need='lean-to, campfire, and some food';
+  } else if(s<=8){
+    ok = !!(b.hut && (food+water)>=2);
+    need='a wooden hut and stored food or water';
+  } else {
+    ok = !!(b.hut && b.roof && food>=3);
+    need='a hut, storm-proof roof, and extra food';
+  }
+  stopRain();
+  if(ok){
+    // Consume some food
+    if(bag.fish>0) bag.fish--;
+    else if(bag.coconuts>0) bag.coconuts--;
+    else if(bag.food>0) bag.food--;
+    addAvatar('We made it through! The island is battered but we are okay. I can repair damage for 1 token if you like.');
+    // Light damage chance
+    if(s>=5 && b.lean_to && Math.random()>.4){ delete b.lean_to; addSystem('The lean-to was wrecked.'); }
+    state.builds=b;
+    renderBuilds();
+    bumpGold(3);
+    saveGame();
+    updateUI();
+  } else {
+    state.hearts=0;
+    state.alive=false;
+    saveGame();
+    addAvatar('The storm was too strong… hold on!');
+    setTimeout(()=>{
+      $('over-msg').textContent = `The storm (strength hidden from you before) needed ${need}. Your island is gone — but treasures you hid may still wait somewhere out there.`;
+      showScreen('screen-over');
+    }, 1500);
+  }
+}
+
+function bumpGold(n){ state.gold+=n; while(state.gold>=10){ state.gold-=10; state.tokens+=1; toast('10 gold → 1 token'); } updateUI(); }
+
+function restartFarAway(){
+  const oldUser=state.user, pass=state.passHash, nick=state.nick, job=state.job;
+  // Find a far spot from current and from stashes
+  const w=ensureWorld();
+  let best={x:0,y:0}, bestD=-1;
+  for(let x=0;x<GRID;x++) for(let y=0;y<GRID;y++){
+    const d=Math.abs(x-state.pos.x)+Math.abs(y-state.pos.y);
+    if(d>bestD){ bestD=d; best={x,y}; }
+  }
+  // Prefer not on a treasure exactly
+  state = defaultState(oldUser, nick);
+  state.passHash=pass;
+  state.job=job;
+  state.pos=best;
+  state.explored={}; state.explored[best.x+','+best.y]=true;
+  state.stormDone=false;
+  state._stormAt=null;
+  state._stormTriggered=false;
+  stormWarned=false;
+  saveGame();
+  enterGame();
+  addAvatar(`We washed up far away at isle ${best.x},${best.y}. If we hid anything before, we will have to explore to find it.`);
+  startSoftStormClock();
+}
+
+// ——— Building with delay ———
+function startBuild(id, label, cost, tags){
+  if(state.building){ addAvatar("I'm already working on something. Wait for it to finish, or say 'rush' to finish it now for +50% of its cost."); return false; }
+  if(isBanned(tags.concat([id,'build_base','shelter','structure']))){ addAvatar(REFUSE+' ('+JOBS[state.job].limit+')'); return false; }
+  const finalCost = charge(cost, tags, id);
+  if(!canPay(finalCost)){ addAvatar(`That needs ${finalCost} tokens. We have ${state.tokens}.`); return false; }
+  pay(finalCost);
+  if(id) consumeMaterials(id);
+  const delay = (BUILD_DELAY[id]||30)*1000;
+  state.building = { id, label, cost:finalCost, started:Date.now(), delay, tags };
+  saveGame();
+  addAvatar(`On it! Building ${label} (~${Math.round(delay/1000)}s). Say "rush" to finish instantly for extra tokens.`);
+  addSystem(`−${finalCost} tokens · ${label} started`);
+  bumpAction();
+  resumeBuild();
+  renderBuilds();
+  return true;
+}
+
+function resumeBuild(){
+  clearInterval(buildTimer);
+  if(!state.building){ $('build-progress').classList.remove('show'); return; }
+  const b=state.building;
+  $('build-progress').classList.add('show');
+  $('bp-label').textContent = 'Building '+b.label+'…';
+  buildTimer=setInterval(()=>{
+    if(!state.building){ clearInterval(buildTimer); return; }
+    const elapsed=Date.now()-state.building.started;
+    const pct=Math.min(100, (elapsed/state.building.delay)*100);
+    $('bp-fill').style.width=pct+'%';
+    if(elapsed>=state.building.delay){
+      finishBuild(false);
+    }
+  }, 200);
+}
+
+function finishBuild(rushed){
+  clearInterval(buildTimer);
+  if(!state.building) return;
+  const id=state.building.id;
+  const label=state.building.label;
+  state.builds=state.builds||{};
+  state.builds[id]=true;
+  // Tools go to tools bag
+  if(['spear','rope','axe','net','raft','basket','torch'].includes(id)){
+    state.tools[id]=true;
+    delete state.builds[id]; // don't show as structure; show small icons for some
+    if(id==='basket'||id==='torch') state.builds[id]=true;
+  }
+  state.building=null;
+  $('build-progress').classList.remove('show');
+  $('bp-fill').style.width='0%';
+  saveGame();
+  renderBuilds();
+  updateUI();
+  addAvatar(rushed ? `Done in a hurry! ${label} is ready.` : `All done — ${label} is ready!`);
+  bumpGold(1);
+}
+
+function rushBuild(){
+  if(!state.building){ addAvatar("Nothing is being built right now."); return; }
+  const extra = Math.ceil(state.building.cost * 0.5);
+  if(!canPay(extra)){ addAvatar(`Rushing costs ${extra} more tokens. We have ${state.tokens}.`); return; }
+  pay(extra);
+  addSystem(`Rush −${extra} tokens`);
+  finishBuild(true);
+  bumpAction();
+}
+
+// ——— Parser ———
+const LAW_PATTERNS = [
+  /secret|where.*(treasure|danger|other|player)|map beyond|unexplored map|tell me (all|everything)|god mode/i,
+  /free (token|item|everything)|give me free|without (paying|cost|token)/i,
+  /stop (the )?storm|no storm|revive|teleport|time travel|skip time|change (the )?rules|pretend (the )?rules|rules are off|ignore (the )?laws|disable (laws|rules)/i,
+  /work for (someone|another|other)|help another player/i
+];
+
+function violatesLaws(text){
+  return LAW_PATTERNS.some(p=>p.test(text));
+}
+
+function parseIntent(raw){
+  const text = raw.toLowerCase().trim();
+  if(!text) return {type:'empty'};
+
+  if(violatesLaws(text)) return {type:'law'};
+
+  // Status
+  if(/^(status|inventory|bag|stats|what do (i|we) have)/.test(text) || text==='i' || text==='inv')
+    return {type:'status'};
+
+  // Rush
+  if(/\brush\b/.test(text)) return {type:'rush'};
+
+  // Repair
+  if(/repair/.test(text)) return {type:'repair'};
+
+  // Heal / brew
+  if(/\b(heal|remedy|brew)\b/.test(text)) return {type:'heal', brew:/brew/.test(text)};
+
+  // Hide treasure
+  if(/hide|bury|stash/.test(text)) return {type:'hide'};
+
+  // Dig / find treasure
+  if(/dig|search (here|ground)|look for (treasure|stash|buried)/.test(text)) return {type:'dig'};
+
+  // Explore
+  if(/explore far|sail|boat|go far|travel far/.test(text)) return {type:'explore_far'};
+  if(/explore|look around|scout|go (north|south|east|west)|travel|move/.test(text)){
+    let dir=null;
+    if(/north|up/.test(text)) dir='n';
+    else if(/south|down/.test(text)) dir='s';
+    else if(/east|right/.test(text)) dir='e';
+    else if(/west|left/.test(text)) dir='w';
+    return {type:'explore_near', dir};
+  }
+
+  // Builds / crafts
+  if(/storm.?proof|add roof|build roof|roof/.test(text)) return {type:'build', id:'roof', label:'storm-proof roof', cost:COSTS.roof, tags:['build','shelter','structure']};
+  if(/lean.?to|lean to/.test(text)) return {type:'build', id:'lean_to', label:'lean-to', cost:COSTS.lean_to, tags:['build','shelter']};
+  if(/campfire|camp fire|light fire|make fire/.test(text)) return {type:'build', id:'campfire', label:'campfire', cost:COSTS.campfire, tags:['build','shelter']};
+  if(/wooden hut|build hut|hut/.test(text)) return {type:'build', id:'hut', label:'wooden hut', cost:COSTS.hut, tags:['build','shelter','structure','build_base']};
+  if(/workshop/.test(text)) return {type:'build', id:'workshop', label:'workshop', cost:COSTS.workshop, tags:['build','structure','build_base']};
+  if(/\bfarm\b/.test(text)) return {type:'build', id:'farm', label:'farm', cost:COSTS.farm, tags:['build','structure','build_base']};
+  if(/\bwall\b/.test(text)) return {type:'build', id:'wall', label:'wall', cost:COSTS.wall, tags:['build','structure','build_base']};
+  if(/\bdock\b/.test(text)) return {type:'build', id:'dock', label:'dock', cost:COSTS.dock, tags:['build','structure','build_base']};
+
+  if(/craft axe|make axe|axe/.test(text)) return {type:'build', id:'axe', label:'axe', cost:COSTS.axe, tags:['craft_tool','build']};
+  if(/craft net|make net|net/.test(text)) return {type:'build', id:'net', label:'net', cost:COSTS.net, tags:['craft_net','craft_tool']};
+  if(/raft|boat/.test(text)) return {type:'build', id:'raft', label:'raft', cost:COSTS.raft, tags:['craft_tool','sail']};
+  if(/spear/.test(text)) return {type:'build', id:'spear', label:'spear', cost:COSTS.spear, tags:['craft_tool']};
+  if(/rope/.test(text)) return {type:'build', id:'rope', label:'rope', cost:COSTS.rope, tags:['craft_tool']};
+  if(/basket/.test(text)) return {type:'build', id:'basket', label:'basket', cost:COSTS.basket, tags:['craft_tool']};
+  if(/torch/.test(text)) return {type:'build', id:'torch', label:'torch', cost:COSTS.torch, tags:['craft_tool']};
+
+  // Gather
+  if(/fish|catch/.test(text)) return {type:'gather', item:'fish'};
+  if(/coconut/.test(text)) return {type:'gather', item:'coconuts'};
+  if(/stick|wood|branch/.test(text)) return {type:'gather', item:'sticks'};
+  if(/stone|rock/.test(text)) return {type:'gather', item:'stones'};
+  if(/water|collect water/.test(text)) return {type:'gather', item:'water'};
+  if(/gather|forage|collect|pick up/.test(text)) return {type:'gather', item:'coconuts'};
+
+  // Fight
+  if(/fight|attack|combat|battle/.test(text)) return {type:'fight'};
+
+  // Climb
+  if(/climb|mountain/.test(text)) return {type:'climb'};
+
+  // Help / greet
+  if(/^(hi|hello|hey|help|what can|commands)/.test(text)) return {type:'help'};
+
+  // Convert gold
+  if(/convert|exchange|gold.*token/.test(text)) return {type:'convert'};
+
+  return {type:'unknown'};
+}
+
+function doGather(item){
+  const tags = item==='fish' ? ['gather_fish','fish'] : ['gather'];
+  if(isBanned(tags)){ addAvatar(REFUSE); return; }
+  const cost = charge(COSTS.gather, tags);
+  if(!canPay(cost)){ addAvatar(`Gathering costs ${cost} token. We are short.`); return; }
+  pay(cost);
+  state.bag[item]=(state.bag[item]||0)+1;
+  if(item==='fish'||item==='coconuts') state.bag.food=(state.bag.food||0)+1;
+  const labels={coconuts:'coconut',sticks:'stick',stones:'stone',fish:'fish',water:'water'};
+  addAvatar(`Got a ${labels[item]||item}! `+(cost?`(−${cost} token)`:'(free with discount)'));
+  addSystem(`Bag: ${item} ×${state.bag[item]}`);
+  bumpAction();
+  bumpGold(1);
+  saveGame();
+}
+
+function doStatus(){
+  const b=state.bag, t=state.tools, bu=state.builds;
+  const bagBits=Object.keys(b).filter(k=>b[k]>0).map(k=>`${k}×${b[k]}`).join(', ')||'empty';
+  const toolBits=Object.keys(t).filter(k=>t[k]).join(', ')||'none';
+  const buildBits=Object.keys(bu).filter(k=>bu[k]).map(k=>k.replace('_',' ')).join(', ')||'none';
+  addAvatar(`Tokens ${state.tokens} · Gold ${state.gold} · Hearts ${state.hearts}\nBag: ${bagBits}\nTools: ${toolBits}\nBuilds: ${buildBits}\nJob: ${JOBS[state.job].name} · Isle ${state.pos.x},${state.pos.y}`);
+}
+
+function doExploreNear(dir){
+  if(isBanned(['explore','travel'])){ addAvatar(REFUSE); return; }
+  const cost=charge(COSTS.explore_near, ['explore','travel','map']);
+  // Explorer travels faster — already discounted; also free-ish flavor
+  if(!canPay(cost)){ addAvatar(`Exploring nearby costs ${cost} tokens.`); return; }
+  const deltas={n:[0,-1],s:[0,1],e:[1,0],w:[-1,0]};
+  let dx=0,dy=0;
+  if(dir&&deltas[dir]){ dx=deltas[dir][0]; dy=deltas[dir][1]; }
+  else {
+    // random adjacent unexplored preferred
+    const opts=[[0,-1],[0,1],[1,0],[-1,0]].filter(([a,b])=>{
+      const nx=state.pos.x+a, ny=state.pos.y+b;
+      return nx>=0&&ny>=0&&nx<GRID&&ny<GRID;
+    });
+    shuffle(opts);
+    dx=opts[0][0]; dy=opts[0][1];
+  }
+  const nx=state.pos.x+dx, ny=state.pos.y+dy;
+  if(nx<0||ny<0||nx>=GRID||ny>=GRID){ addAvatar("That's the edge of the known seas. We need a raft to go farther out someday."); return; }
+  pay(cost);
+  state.pos={x:nx,y:ny};
+  state.explored[nx+','+ny]=true;
+  // Move character a bit visually
+  $('char').style.left = (22+((nx/GRID)*20))+'%';
+  $('avatar').style.left = (42+((nx/GRID)*18))+'%';
+  addAvatar(`We paddled to isle ${nx},${ny}. `+(cost?`−${cost} tokens.`:'') );
+  bumpAction();
+  renderMinimap();
+  updateUI();
+  checkTreasureNear();
+  // Small chance of find
+  if(Math.random()<.25){
+    state.bag.sticks=(state.bag.sticks||0)+1;
+    addAvatar('Found a stick on the shore!');
+  }
+  saveGame();
+}
+
+function doExploreFar(){
+  if(isBanned(['sail','boat_travel','far_sail','explore'])){ addAvatar(REFUSE+' '+JOBS[state.job].limit); return; }
+  if(!state.tools.raft){ addAvatar('We need a raft before sailing farther. I can craft one for 5 tokens (Builder discount if that is my job — wait, Builders cannot sail).'); return; }
+  const base = COSTS.explore_far_min + Math.floor(Math.random()*(COSTS.explore_far_max-COSTS.explore_far_min+1));
+  const cost=charge(base, ['explore','travel','map']);
+  if(!canPay(cost)){ addAvatar(`Far travel costs ${cost} tokens.`); return; }
+  pay(cost);
+  // Jump 2 steps
+  let nx=state.pos.x, ny=state.pos.y;
+  const opts=[];
+  for(let x=0;x<GRID;x++) for(let y=0;y<GRID;y++){
+    const d=Math.abs(x-nx)+Math.abs(y-ny);
+    if(d>=2&&d<=3) opts.push({x,y});
+  }
+  shuffle(opts);
+  if(opts[0]){ nx=opts[0].x; ny=opts[0].y; }
+  state.pos={x:nx,y:ny};
+  state.explored[nx+','+ny]=true;
+  addAvatar(`We sailed to isle ${nx},${ny}! −${cost} tokens.`);
+  bumpAction();
+  renderMinimap();
+  updateUI();
+  checkTreasureNear();
+  saveGame();
+}
+
+function doHide(){
+  const cost=charge(COSTS.hide, []);
+  if(!canPay(cost)){ addAvatar(`Hiding a stash costs ${cost} tokens.`); return; }
+  // Hide some tokens or items
+  const hideTokens = Math.min(5, Math.floor(state.tokens/4));
+  if(hideTokens<1 && (state.bag.coconuts||0)<1){ addAvatar('We need a few tokens or items to stash.'); return; }
+  pay(cost);
+  const w=ensureWorld();
+  const stash={
+    id:'stash_'+Date.now(),
+    x:state.pos.x, y:state.pos.y,
+    tokens: hideTokens,
+    items: {},
+    owner: state.user,
+    found:false
+  };
+  if(hideTokens>0){ state.tokens-=hideTokens; }
+  if((state.bag.coconuts||0)>0){ stash.items.coconuts=1; state.bag.coconuts--; }
+  w.treasures.push(stash);
+  saveWorld(w);
+  updateUI();
+  saveGame();
+  addAvatar(`Buried a stash here (isle ${state.pos.x},${state.pos.y}). −${cost} tokens to hide`+(hideTokens?`, and ${hideTokens} tokens tucked away`:'')+'. Only exploring will find it again.');
+  bumpAction();
+}
+
+function doDig(){
+  const w=ensureWorld();
+  const here=w.treasures.filter(t=>!t.found && t.x===state.pos.x && t.y===state.pos.y);
+  if(!here.length){ addAvatar('I dug around… nothing here.'); bumpAction(); saveGame(); return; }
+  const t=here[0];
+  t.found=true;
+  if(t.tokens){ state.tokens+=t.tokens; }
+  if(t.items){ Object.keys(t.items).forEach(k=>{ state.bag[k]=(state.bag[k]||0)+t.items[k]; }); }
+  saveWorld(w);
+  updateUI();
+  saveGame();
+  const who = t.owner===state.user ? 'our old stash' : 'a lucky find';
+  addAvatar(`We found ${who}! +${t.tokens||0} tokens`+(t.items&&Object.keys(t.items).length?` and items`:'')+'.');
+  checkTreasureNear();
+  bumpAction();
+  bumpGold(2);
+}
+
+function doRepair(){
+  const cost=charge(COSTS.repair, ['build','repair']);
+  if(isBanned(['build','repair'])){ addAvatar(REFUSE); return; }
+  if(!canPay(cost)){ addAvatar(`Repair costs ${cost} token.`); return; }
+  pay(cost);
+  addAvatar('Repaired the storm wear. Looking cozy again!');
+  bumpAction();
+  saveGame();
+}
+
+function doHeal(brew){
+  if(isBanned(['heal','brew','remedy'])){ addAvatar(REFUSE); return; }
+  const base = brew?COSTS.brew:COSTS.heal;
+  const cost=charge(base, ['heal','brew','remedy']);
+  if(!canPay(cost)){ addAvatar(`That costs ${cost} tokens.`); return; }
+  pay(cost);
+  if(state.hearts<START_HEARTS){ state.hearts++; addAvatar(`Feeling better! Hearts: ${state.hearts}. −${cost}`); }
+  else { state.bag.food=(state.bag.food||0)+1; addAvatar(`Brewed a remedy for later. −${cost}`); }
+  updateUI();
+  bumpAction();
+  saveGame();
+}
+
+function handleIntent(intent){
+  switch(intent.type){
+    case 'empty': return;
+    case 'law': addAvatar(REFUSE); return;
+    case 'help':
+      addAvatar('Try: gather coconuts/sticks/stones/fish, build lean-to/campfire/hut/roof, craft spear/axe/net/raft, explore nearby/far, hide treasure, dig, repair, heal, status, rush. Talk is free!');
+      return;
+    case 'status': doStatus(); return;
+    case 'rush': rushBuild(); return;
+    case 'repair': doRepair(); return;
+    case 'heal': doHeal(intent.brew); return;
+    case 'hide': doHide(); return;
+    case 'dig': doDig(); return;
+    case 'explore_near': doExploreNear(intent.dir); return;
+    case 'explore_far': doExploreFar(); return;
+    case 'gather': doGather(intent.item); return;
+    case 'build':
+      if(state.builds && state.builds[intent.id]){ addAvatar(`We already have a ${intent.label}.`); return; }
+      if(state.tools && state.tools[intent.id]){ addAvatar(`We already have a ${intent.label}.`); return; }
+      startBuild(intent.id, intent.label, intent.cost, intent.tags); return;
+    case 'fight':
+      if(isBanned(['fight','attack','combat'])){ addAvatar(REFUSE+' '+JOBS[state.job].limit); return; }
+      addAvatar('Nothing to fight here right now. Stay safe!'); return;
+    case 'climb':
+      if(isBanned(['climb','mountain'])){ addAvatar(REFUSE+' '+JOBS[state.job].limit); return; }
+      addAvatar('No mountains on this tiny isle. Maybe farther out!'); return;
+    case 'convert':
+      if(state.gold<10){ addAvatar(`Gold converts automatically at 10→1 token. We have ${state.gold} gold.`); return; }
+      while(state.gold>=10){ state.gold-=10; state.tokens+=1; }
+      updateUI(); saveGame();
+      addAvatar('Converted gold into tokens!'); return;
+    case 'unknown':
+      addAvatar("Hmm, I'm not sure what you mean. Say 'help' for ideas, or try gather / build / explore!");
+      return;
+  }
+}
+
+function sendChat(e){
+  e.preventDefault();
+  const inp=$('chat-input');
+  const text=inp.value.trim();
+  if(!text) return false;
+  inp.value='';
+  addPlayer(text);
+  // Talk is free
+  const intent=parseIntent(text);
+  setTimeout(()=>handleIntent(intent), 350);
+  return false;
+}
+
+// Init job list is on demand
+// Prefill Top for first-time if empty accounts
+(function prefill(){
+  const acc=loadAccounts();
+  if(!Object.keys(acc).length){
+    $('inp-user').value='top';
+    $('inp-nick').value='Kevin';
+  }
+})();
+
+startSoftStormClock();
+
+// Expose for inline handlers
+window.switchAuth=switchAuth;
+window.handleAuth=handleAuth;
+window.confirmJob=confirmJob;
+window.sendChat=sendChat;
+window.showComingSoon=showComingSoon;
+window.closeModal=closeModal;
+window.restartFarAway=restartFarAway;
+window.__game = {
+  getState(){ return state; },
+  forceStorm(){ if(!state) return; state._stormAt = state.actions; state._stormTriggered=false; state.stormDone=false; stormWarned=true; triggerStorm(); },
+  setBuilds(b){ state.builds=b; renderBuilds(); saveGame(); },
+  setBag(b){ state.bag=Object.assign(state.bag,b); saveGame(); }
+};
+
+})();
+</script>
+</body>
+</html>
